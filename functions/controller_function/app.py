@@ -5,6 +5,10 @@ import math
 import subprocess
 from urllib.parse import unquote_plus
 from botocore.config import Config
+from boto3.dynamodb.conditions import Key
+
+dynamodb = boto3.resource('dynamodb')
+dataset_table = dynamodb.Table('serverless-video-transcode-datasets')
 
 s3_client = boto3.client('s3', os.environ['AWS_REGION'], config=Config(
     s3={'addressing_style': 'path'}))
@@ -76,6 +80,19 @@ def lambda_handler(event, context):
     object_name = event['object_name']
     download_dir = os.path.join(efs_path, event['job_id'])
     segment_time = int(event.get('segment_time', os.environ['DEFAULT_SEGMENT_TIME']))
+
+    #Try to update the ddb table for status
+
+    print("GUMING DEBUG>>")
+    print(key)
+    response = dataset_table.query(
+        IndexName='s3_key-index',
+        KeyConditionExpression=Key('s3_key').eq(key)
+    )
+    print(response)
+    item = response['Items'][0]
+    item['status'] = 'Start transcoding'
+    dataset_table.put_item(Item=item)
 
     try:
         os.mkdir(download_dir)

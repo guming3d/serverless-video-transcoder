@@ -6,6 +6,7 @@ import datetime
 from urllib.parse import unquote_plus
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
+from boto3.dynamodb.conditions import Key
 
 patch_all()
 
@@ -14,6 +15,8 @@ job_table = dynamodb.Table(os.environ['JOB_TABLE'])
 create_hls = os.environ['ENABLE_HLS']
 segment_time = os.environ['DEFAULT_SEGMENT_TIME']
 sfn_client = boto3.client('stepfunctions')
+
+dataset_table = dynamodb.Table('serverless-video-transcode-datasets')
 
 
 def lambda_handler(event, context):
@@ -35,6 +38,15 @@ def lambda_handler(event, context):
                 'created_at': datetime.datetime.now().isoformat()
             }
         )
+
+        #Try to update the ddb table for status
+
+        response = dataset_table.query(
+            IndexName='s3_key-index',
+            KeyConditionExpression=Key('status').eq(key)
+        )
+        print("GUMING DEBUG>> response of query is "+response)
+
 
         # kick start the main statemachine for transcoding
         response = sfn_client.start_execution(

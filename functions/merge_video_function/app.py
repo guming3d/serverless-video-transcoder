@@ -5,7 +5,10 @@ import shutil
 import re
 from urllib.parse import unquote_plus
 from botocore.config import Config
+from boto3.dynamodb.conditions import Key
 
+dynamodb = boto3.resource('dynamodb')
+dataset_table = dynamodb.Table('serverless-video-transcode-datasets')
 s3_client = boto3.client('s3', os.environ['AWS_REGION'], config=Config(s3={'addressing_style': 'path'}))
 efs_path = os.environ['EFS_PATH']
 
@@ -36,6 +39,11 @@ def lambda_handler(event, context):
         return {}
 
     download_dir = event[0][0]['download_dir']
+    s3_bucket = event[0][0]['s3_bucket']
+    s3_prefix = event[0][0]['s3_prefix']
+
+
+    print(event)
     os.chdir(download_dir)
 
     segment_list = []
@@ -50,11 +58,25 @@ def lambda_handler(event, context):
     job_id = download_dir.split("/")[-1]
     object_name = event[0][0]['object_name']
 
-    bucket = os.environ['MEDIA_BUCKET']
-    key = 'output/{}/{}'.format(job_id, object_name)
+    # bucket = os.environ['MEDIA_BUCKET']
+    # key = 'output/{}/{}'.format(job_id, object_name)
+    bucket = s3_bucket
+    key = s3_prefix +'output/' + object_name
+    print("GUMING DEBUG>>> new key is " + key)
+
     s3_client.upload_file(merged_file, bucket, key, ExtraArgs={'ContentType': 'video/mp4'})
     # delete the temp download directory
     shutil.rmtree(download_dir)
+
+    key = s3_prefix + object_name
+    response = dataset_table.query(
+        IndexName='s3_key-index',
+        KeyConditionExpression=Key('s3_key').eq(key)
+    )
+    print(response)
+    item = response['Items'][0]
+    item['status'] = 'Transcoding Completed'
+    dataset_table.put_item(Item=item)
 
     return {
         'download_dir': download_dir,

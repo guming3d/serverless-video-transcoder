@@ -61,12 +61,23 @@ def lambda_handler(event, context):
     # bucket = os.environ['MEDIA_BUCKET']
     # key = 'output/{}/{}'.format(job_id, object_name)
     bucket = s3_bucket
-    key = s3_prefix +'output/' + object_name
-    print("GUMING DEBUG>>> new key is " + key)
+    input_key = s3_prefix +'output/' + object_name
+    print("GUMING DEBUG>>> new key is " + input_key)
 
-    s3_client.upload_file(merged_file, bucket, key, ExtraArgs={'ContentType': 'video/mp4'})
+    s3_client.upload_file(merged_file, bucket, input_key, ExtraArgs={'ContentType': 'video/mp4'})
     # delete the temp download directory
     shutil.rmtree(download_dir)
+
+
+    # Generate the URL to get 'key-name' from 'bucket-name'
+    url = s3_client.generate_presigned_url(
+        ClientMethod='get_object',
+        Params={
+            'Bucket': bucket,
+            'Key': input_key
+        }
+    )
+    print(url)
 
     key = s3_prefix + object_name
     response = dataset_table.query(
@@ -76,6 +87,7 @@ def lambda_handler(event, context):
     print(response)
     item = response['Items'][0]
     item['status'] = 'Transcoding Completed'
+    item['signed_url'] = url
     dataset_table.put_item(Item=item)
 
     return {

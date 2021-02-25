@@ -31,12 +31,15 @@ def analyze_video(bucket, key, video_file):
     return json.loads(subprocess.check_output(cmd))
 
 
-def generate_control_data(video_details, segment_time, download_dir, object_name):
+def generate_control_data(video_details, segment_time, download_dir, object_name, s3_bucket, s3_prefix):
     control_data = {
         "video_details": video_details,
         "download_dir": download_dir,
         "object_name": object_name,
-        "video_groups": []
+        "video_groups": [],
+        "s3_bucket": s3_bucket,
+        "s3_prefix": s3_prefix
+
     }
 
     video_stream = None
@@ -81,6 +84,19 @@ def lambda_handler(event, context):
     download_dir = os.path.join(efs_path, event['job_id'])
     segment_time = int(event.get('segment_time', os.environ['DEFAULT_SEGMENT_TIME']))
 
+
+    try:
+        os.mkdir(download_dir)
+    except FileExistsError as error:
+        print('directory exist')
+
+    os.chdir(download_dir)
+
+    video_details = analyze_video(bucket, key, object_name)
+
+    print("GUMING DEBUG>> video details is")
+    print(video_details)
+
     #Try to update the ddb table for status
 
     print("GUMING DEBUG>>")
@@ -92,17 +108,11 @@ def lambda_handler(event, context):
     print(response)
     item = response['Items'][0]
     item['status'] = 'Start transcoding'
+    item['duration'] = video_details.get('format').get('duration')
+    item['size'] = video_details.get('format').get('size')
     dataset_table.put_item(Item=item)
 
-    try:
-        os.mkdir(download_dir)
-    except FileExistsError as error:
-        print('directory exist')
+    control_data = generate_control_data(video_details, segment_time, download_dir, object_name, bucket, object_prefix)
 
-    os.chdir(download_dir)
-
-    video_details = analyze_video(bucket, key, object_name)
-
-    control_data = generate_control_data(video_details, segment_time, download_dir, object_name)
 
     return control_data

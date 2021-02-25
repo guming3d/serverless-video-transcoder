@@ -24,7 +24,9 @@
                 "presigned_url.$": "$.video_details.format.filename",
                 "download_dir.$": "$.download_dir",
                 "object_name.$": "$.object_name",
-                "video_segment.$": "$$.Map.Item.Value"
+                "video_segment.$": "$$.Map.Item.Value",
+                "s3_bucket.$": "$.s3_bucket",
+                "s3_prefix.$": "$.s3_prefix"
               },
               "Iterator": {
                 "StartAt": "TranscodeVideoGroup0",
@@ -61,7 +63,9 @@
                 "presigned_url.$": "$.video_details.format.filename",
                 "download_dir.$": "$.download_dir",
                 "object_name.$": "$.object_name",
-                "video_segment.$": "$$.Map.Item.Value"
+                "video_segment.$": "$$.Map.Item.Value",
+                "s3_bucket.$": "$.s3_bucket",
+                "s3_prefix.$": "$.s3_prefix"
               },
               "Iterator": {
                 "StartAt": "TranscodeVideoGroup1",
@@ -98,7 +102,9 @@
                 "presigned_url.$": "$.video_details.format.filename",
                 "download_dir.$": "$.download_dir",
                 "object_name.$": "$.object_name",
-                "video_segment.$": "$$.Map.Item.Value"
+                "video_segment.$": "$$.Map.Item.Value",
+                "s3_bucket.$": "$.s3_bucket",
+                "s3_prefix.$": "$.s3_prefix"
               },
               "Iterator": {
                 "StartAt": "TranscodeVideoGroup2",

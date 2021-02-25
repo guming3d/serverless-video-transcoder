@@ -31,14 +31,15 @@ def analyze_video(bucket, key, video_file):
     return json.loads(subprocess.check_output(cmd))
 
 
-def generate_control_data(video_details, segment_time, download_dir, object_name, s3_bucket, s3_prefix):
+def generate_control_data(video_details, segment_time, download_dir, object_name, s3_bucket, s3_prefix, options):
     control_data = {
         "video_details": video_details,
         "download_dir": download_dir,
         "object_name": object_name,
         "video_groups": [],
         "s3_bucket": s3_bucket,
-        "s3_prefix": s3_prefix
+        "s3_prefix": s3_prefix,
+        "options": options
 
     }
 
@@ -83,6 +84,7 @@ def lambda_handler(event, context):
     object_name = event['object_name']
     download_dir = os.path.join(efs_path, event['job_id'])
     segment_time = int(event.get('segment_time', os.environ['DEFAULT_SEGMENT_TIME']))
+    options = event['options']
 
 
     try:
@@ -112,7 +114,7 @@ def lambda_handler(event, context):
     item['size'] = video_details.get('format').get('size')
     dataset_table.put_item(Item=item)
 
-    control_data = generate_control_data(video_details, segment_time, download_dir, object_name, bucket, object_prefix)
+    control_data = generate_control_data(video_details, segment_time, download_dir, object_name, bucket, object_prefix, options)
 
 
     return control_data

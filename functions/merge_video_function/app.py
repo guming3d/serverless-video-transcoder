@@ -38,12 +38,13 @@ def lambda_handler(event, context):
     if len(event) == 0:
         return {}
 
+    print(event)
+
     download_dir = event[0][0]['download_dir']
     s3_bucket = event[0][0]['s3_bucket']
     s3_prefix = event[0][0]['s3_prefix']
 
 
-    print(event)
     os.chdir(download_dir)
 
     segment_list = []

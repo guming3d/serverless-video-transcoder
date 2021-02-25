@@ -26,7 +26,8 @@
                 "object_name.$": "$.object_name",
                 "video_segment.$": "$$.Map.Item.Value",
                 "s3_bucket.$": "$.s3_bucket",
-                "s3_prefix.$": "$.s3_prefix"
+                "s3_prefix.$": "$.s3_prefix",
+                "options.$": "$.options"
               },
               "Iterator": {
                 "StartAt": "TranscodeVideoGroup0",
@@ -65,7 +66,8 @@
                 "object_name.$": "$.object_name",
                 "video_segment.$": "$$.Map.Item.Value",
                 "s3_bucket.$": "$.s3_bucket",
-                "s3_prefix.$": "$.s3_prefix"
+                "s3_prefix.$": "$.s3_prefix",
+                "options.$": "$.options"
               },
               "Iterator": {
                 "StartAt": "TranscodeVideoGroup1",
@@ -104,7 +106,8 @@
                 "object_name.$": "$.object_name",
                 "video_segment.$": "$$.Map.Item.Value",
                 "s3_bucket.$": "$.s3_bucket",
-                "s3_prefix.$": "$.s3_prefix"
+                "s3_prefix.$": "$.s3_prefix",
+                "options.$": "$.options"
               },
               "Iterator": {
                 "StartAt": "TranscodeVideoGroup2",
